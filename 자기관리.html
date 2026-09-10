@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>개인 스케줄러</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Gothic+A1:wght@400;500;700;900&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#FBEEF1; --surface:#FFFFFF; --surface-soft:#FCF3F5;
+    --ink:#3A2A2E; --ink-soft:#93777E; --ink-faint:#C9AEB3;
+    --accent:#DB7C99; --accent-ink:#fff;
+    --line:#F3D9E0; --line-soft:#F8E7EB;
+    --today:#C99A45;
+    --pos:#4B7A5E; --neg:#C1546F;
+    --c-school:#3E5C74; --c-school-bg:#E3EAF0;
+    --c-job:#B0763B; --c-job-bg:#F3E7D8;
+    --c-social:#A15568; --c-social-bg:#F4E2E7;
+    --c-me:#4B7A5E; --c-me-bg:#E1EDE4;
+    --c-sky:#5C77A1; --c-sky-bg:#E4E9F3;
+    --c-plum:#8B5FA0; --c-plum-bg:#EEE3F2;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:"Gothic A1","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    font-size:15.5px; line-height:1.6; -webkit-font-smoothing:antialiased;
+    padding:0 0 92px;
+  }
+  .wrap{max-width:460px;margin:0 auto;padding:0 16px;}
+  h1,h2,h3{margin:0;}
+  button{font-family:inherit;}
+
+  /* ---------- Top header ---------- */
+  .topbar{padding:26px 4px 10px;}
+  .topbar h1{font-family:"Gothic A1",sans-serif;font-weight:900;font-size:1.5rem;}
+  .topbar .sub{color:var(--ink-soft);font-size:.84rem;margin-top:3px;}
+
+  /* ---------- Sub tab pills ---------- */
+  .subtabs{display:flex;gap:6px;margin:12px 0 16px;}
+  .subtabs button{
+    flex:1;font-size:.86rem;padding:9px 0;border-radius:12px;border:1px solid var(--line);
+    background:var(--surface);color:var(--ink-soft);cursor:pointer;
+  }
+  .subtabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;}
+
+  /* ---------- Week nav (일정 / 할일) ---------- */
+  .hero{padding:6px 4px 4px;}
+  .weeknav,.monthnav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .weeknav button.nav,.monthnav button.nav{
+    width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--surface);
+    color:var(--ink-soft);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .weeknav .range,.monthnav .range{font-size:.9rem;color:var(--ink);font-weight:600;}
+  .hero .datebig{display:flex;align-items:baseline;gap:10px;}
+  .hero .datebig .num{font-family:"Gothic A1",sans-serif;font-weight:900;font-size:2.6rem;color:var(--ink);letter-spacing:-.02em;}
+  .hero .datebig .day{font-family:"Gothic A1",sans-serif;font-weight:500;font-size:1.15rem;color:var(--accent);}
+  .hero .summary{margin-top:8px;font-size:.86rem;color:var(--ink-soft);}
+  .hero .summary b{color:var(--ink);font-weight:600;}
+
+  /* ---------- Day list (일정 / 할일) ---------- */
+  .days{display:flex;flex-direction:column;gap:10px;margin-top:8px;}
+  .day{background:var(--surface); border:1px solid var(--line-soft); border-radius:var(--radius); padding:14px 16px 12px;}
+  .day.is-today{border-color:var(--today); box-shadow:0 0 0 1px var(--today) inset;}
+  .day .dhead{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;}
+  .day .dname{font-family:"Gothic A1",sans-serif;font-weight:700;font-size:1.02rem;}
+  .day.is-today .dname{color:var(--today);}
+  .day .ddate{font-size:.78rem;color:var(--ink-soft);}
+  .day .dcount{margin-left:auto;font-size:.74rem;color:var(--ink-soft);}
+  .items{display:flex;flex-direction:column;gap:6px;}
+  .item{display:flex;align-items:flex-start;gap:10px;padding:7px 2px;border-radius:10px;}
+  .item.done{opacity:.45;}
+  .item.done .title{text-decoration:line-through;}
+  .item .check{width:19px;height:19px;flex:none;margin-top:1px;border-radius:6px;border:1.5px solid var(--line);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .item.done .check{background:var(--ink-soft);border-color:var(--ink-soft);}
+  .item.done .check::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(0,-1px);}
+  .item .body{flex:1;min-width:0;}
+  .item .title{font-size:.92rem;}
+  .item .meta{display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;}
+  .item .time{font-size:.74rem;color:var(--ink-soft);}
+  .tag{font-size:.68rem;font-weight:600;border-radius:6px;padding:1px 7px;white-space:nowrap;}
+  .item .del{flex:none;border:none;background:none;color:var(--ink-faint);font-size:.9rem;cursor:pointer;padding:2px 4px;}
+  .empty{color:var(--ink-soft);font-size:.84rem;padding:6px 2px 4px;}
+
+  /* ---------- Timetable (수업) ---------- */
+  .ttable{border-collapse:collapse;width:100%;table-layout:fixed;margin-top:4px;}
+  .ttable th{font-size:.72rem;color:var(--ink-soft);font-weight:600;padding:4px 0;}
+  .ttable td{border:1px solid var(--line-soft);height:38px;text-align:center;vertical-align:middle;font-size:.62rem;line-height:1.25;cursor:pointer;padding:2px;word-break:keep-all;background:var(--surface);touch-action:none;user-select:none;-webkit-user-select:none;}
+  .ttable td.selecting{outline:2px solid var(--accent);outline-offset:-2px;background:var(--surface-soft);}
+  .ttable td.hourlabel{border:none;background:transparent;color:var(--ink-soft);font-size:.66rem;text-align:right;padding-right:6px;cursor:default;}
+  .ttable td.filled b{display:block;font-size:.68rem;}
+  .ttable td.filled span{display:block;font-size:.58rem;opacity:.85;}
+
+  .swatches{display:flex;gap:7px;flex-wrap:wrap;}
+  .swatch{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;}
+  .swatch.sel{border-color:var(--ink);}
+
+  /* ---------- Calendar (시험 / 근무일) ---------- */
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px;}
+  .calgrid .dow{text-align:center;font-size:.7rem;color:var(--ink-soft);padding:2px 0 6px;}
+  .calcell{aspect-ratio:1/1;border-radius:9px;background:var(--surface);border:1px solid var(--line-soft);cursor:pointer;padding:4px;position:relative;display:flex;flex-direction:column;}
+  .calcell.blank{background:transparent;border:none;cursor:default;}
+  .calcell.today{border-color:var(--today);box-shadow:0 0 0 1px var(--today) inset;}
+  .calcell .dnum{font-size:.74rem;color:var(--ink-soft);}
+  .calcell.today .dnum{color:var(--today);font-weight:700;}
+  .calcell .dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:auto;}
+  .calcell .dots span{width:6px;height:6px;border-radius:50%;}
+
+  /* ---------- Chips / rows ---------- */
+  .chiprow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .listcard{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;}
+  .listcard .row1{display:flex;align-items:center;gap:8px;}
+  .listcard .row1 .main{flex:1;font-size:.92rem;}
+  .listcard.done .main{text-decoration:line-through;color:var(--ink-faint);}
+  .listcard .row2{display:flex;align-items:center;gap:8px;margin-top:5px;font-size:.78rem;color:var(--ink-soft);}
+  .amount{font-weight:700;}
+  .amount.pos{color:var(--pos);}
+  .amount.neg{color:var(--neg);}
+
+  .sumbar{background:var(--surface-soft);border:1px solid var(--line-soft);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:.86rem;color:var(--ink-soft);display:flex;justify-content:space-between;align-items:center;}
+  .sumbar b{font-size:1.05rem;color:var(--ink);}
+
+  /* ---------- Pay ---------- */
+  .payrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line-soft);}
+  .payrow .pdate{width:46px;font-size:.8rem;color:var(--ink-soft);flex:none;}
+  .payrow .pmemo{flex:1;font-size:.82rem;color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .payrow input[type=number]{width:56px;font:inherit;font-size:.84rem;padding:6px;border:1.5px solid var(--line);border-radius:8px;text-align:right;}
+  .payrow .pwon{width:78px;text-align:right;font-size:.82rem;font-weight:600;flex:none;}
+  .paytotal{margin-top:14px;padding-top:14px;border-top:2px solid var(--line);font-size:.88rem;}
+  .paytotal .l{display:flex;justify-content:space-between;padding:5px 0;color:var(--ink-soft);}
+  .paytotal .l.net{color:var(--ink);font-weight:700;font-size:1.05rem;}
+
+  /* ---------- Assets ---------- */
+  .assetfield2{padding:12px 0;border-bottom:1px solid var(--line-soft);}
+  .af-label{font-size:.88rem;margin-bottom:8px;}
+  .af-inputs{display:flex;gap:10px;}
+  .af-col{flex:1;display:flex;align-items:center;gap:6px;}
+  .af-tag{font-size:.72rem;color:var(--ink-soft);flex:none;width:30px;}
+  .af-col input{width:100%;font:inherit;font-size:.88rem;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;text-align:right;background:var(--surface-soft);}
+
+  /* ---------- Memo stickies ---------- */
+  .stickygrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px;}
+  .sticky{border-radius:6px;padding:14px 14px 12px;min-height:110px;box-shadow:0 6px 14px rgba(34,48,43,.1);font-size:.86rem;white-space:pre-wrap;word-break:break-word;cursor:pointer;display:flex;flex-direction:column;}
+  .sticky .stxt{flex:1;}
+  .sticky .sdate{font-size:.68rem;opacity:.6;margin-top:8px;}
+  .s-yellow{background:#F7EFC0;}
+  .s-pink{background:#F5DEE3;}
+  .s-mint{background:#D9EEE2;}
+  .s-lav{background:#E5DEF2;}
+  .s-peach{background:#F7E0CE;}
+
+  /* ---------- FAB ---------- */
+  .fab{position:fixed;right:20px;bottom:82px;width:56px;height:56px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:1.6rem;box-shadow:0 10px 24px rgba(34,48,43,.28);cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .fab:active{transform:scale(.95);}
+  .fab.hidden{display:none;}
+  .settingsbtn{position:fixed;right:16px;top:14px;width:34px;height:34px;border-radius:50%;background:var(--surface);border:1px solid var(--line);color:var(--ink-soft);font-size:1rem;cursor:pointer;z-index:12;box-shadow:0 4px 10px rgba(58,42,46,.08);}
+
+  /* ---------- Bottom nav ---------- */
+  .botnav{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line-soft);display:flex;z-index:15;padding-bottom:env(safe-area-inset-bottom);}
+  .botnav button{flex:1;background:none;border:none;padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink-faint);cursor:pointer;}
+  .botnav button svg{width:20px;height:20px;}
+  .botnav button span{font-size:.66rem;}
+  .botnav button.on{color:var(--accent);}
+
+  /* ---------- Sheet / overlay ---------- */
+  .overlay{position:fixed;inset:0;background:rgba(34,48,43,.4);display:none;align-items:flex-end;justify-content:center;z-index:30;}
+  .overlay.open{display:flex;}
+  .sheet{width:100%;max-width:460px;max-height:86vh;overflow-y:auto;background:var(--surface);border-radius:22px 22px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom));animation:up .22s ease;}
+  @keyframes up{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet h3{font-family:"Gothic A1",sans-serif;margin:0 0 14px;font-size:1.15rem;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:.78rem;color:var(--ink-soft);margin-bottom:5px;}
+  .field input[type=text],.field input[type=number],.field textarea,.field select{
+    width:100%;font:inherit;font-size:.94rem;padding:11px 12px;border:1.5px solid var(--line);
+    border-radius:10px;background:var(--surface-soft);color:var(--ink);
+  }
+  .field textarea{resize:vertical;min-height:70px;font-family:inherit;}
+  .row2{display:flex;gap:10px;}
+  .row2 .field{flex:1;}
+  input[type=date],input[type=time]{width:100%;font:inherit;font-size:.9rem;padding:10px 10px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface-soft);color:var(--ink);}
+  .tagpick{display:flex;gap:8px;flex-wrap:wrap;}
+  .tagpick button{font:inherit;font-size:.82rem;padding:7px 13px;border-radius:20px;border:1.5px solid var(--line);background:var(--surface-soft);color:var(--ink-soft);cursor:pointer;}
+  .tagpick button.sel{font-weight:700;}
+  .sheet-actions{display:flex;gap:10px;margin-top:16px;}
+  .sheet-actions button{flex:1;font:inherit;font-size:.94rem;padding:13px;border-radius:12px;border:none;cursor:pointer;}
+  .btn-cancel{background:var(--surface-soft);color:var(--ink-soft);}
+  .btn-save{background:var(--accent);color:#fff;font-weight:600;}
+  .btn-danger{background:var(--c-social-bg);color:var(--c-social);font-weight:600;}
+  .exlist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+  .exlist .exrow{display:flex;align-items:center;gap:8px;background:var(--surface-soft);border-radius:10px;padding:8px 10px;font-size:.82rem;}
+  .exlist .exrow .x{margin-left:auto;color:var(--ink-faint);cursor:pointer;background:none;border:none;font-size:.9rem;}
+  hr.sep{border:none;border-top:1px solid var(--line-soft);margin:14px 0;}
+
+  .status{position:fixed;top:14px;left:50%;transform:translateX(-50%);font-size:.78rem;color:var(--ink-soft);background:var(--surface);border:1px solid var(--line-soft);border-radius:20px;padding:6px 14px;z-index:40;display:none;}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<button class="fab" id="fab" aria-label="추가">+</button>
+<button class="settingsbtn" id="settingsBtn" aria-label="백업">⚙</button>
+
+<div class="overlay" id="overlay"><div class="sheet" id="sheet"></div></div>
+<div class="status" id="statusMsg"></div>
+
+<nav class="botnav" id="botnav"></nav>
+
+<script>
+/* ===================== 데이터 ===================== */
+const STORAGE_KEY = 'huiju-app-data';
+let DB = { schedule:[], classes:[], assignments:[], exams:[], workdays:[], jobTodo:[],
+           income:[], expense:[], transfer:[], assets:{}, todo:[], memos:[] };
+
+const state = {
+  tab:'schedule',
+  sub:{ school:'class', job:'workday', finance:'income' },
+  weekOffset:0,        // 일정
+  todoWeekOffset:0,    // 할일
+  schoolMonthOffset:0, // 시험
+  jobMonthOffset:0,    // 근무일/급여
+  finMonthOffset:0,    // 재정
+};
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function toKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function ymKey(d){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}`; }
+function startOfWeek(d){ const dt=new Date(d); const shift=(dt.getDay()+6)%7; dt.setDate(dt.getDate()-shift); dt.setHours(0,0,0,0); return dt; }
+const DAY_NAMES=['일','월','화','수','목','금','토'];
+const DOW_MON=['월','화','수','목','금','토','일'];
+function mondayIndex(d){ return (d.getDay()+6)%7; }
+const money = n => (n||0).toLocaleString('ko-KR');
+function escapeHtml(s){ const div=document.createElement('div'); div.textContent=s||''; return div.innerHTML; }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+
+function showStatus(msg, ms=1700){
+  const el=document.getElementById('statusMsg');
+  el.textContent=msg; el.style.display='block';
+  clearTimeout(showStatus._t);
+  showStatus._t=setTimeout(()=>{el.style.display='none';}, ms);
+}
+const hasCloudStorage = (typeof window !== 'undefined') && !!window.storage && typeof window.storage.get === 'function';
+async function loadDB(){
+  try{
+    if(hasCloudStorage){
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value) DB = Object.assign(DB, JSON.parse(res.value));
+    } else {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) DB = Object.assign(DB, JSON.parse(raw));
+    }
+  }catch(e){ /* 첫 실행이거나 저장소를 쓸 수 없는 환경 - 빈 DB로 시작 */ }
+}
+async function saveDB(){
+  try{
+    if(hasCloudStorage) await window.storage.set(STORAGE_KEY, JSON.stringify(DB), false);
+    else localStorage.setItem(STORAGE_KEY, JSON.stringify(DB));
+  }catch(e){ showStatus('저장에 실패했어요. 백업 파일로 내려받아 안전하게 보관해 두세요.'); }
+}
+
+/* ===================== 백업(내보내기/가져오기) ===================== */
+function openBackupSheet(){
+  openSheet(`
+    <h3>백업</h3>
+    <p class="sub" style="margin:0 0 16px;">기기를 바꾸거나 저장 공간이 초기화될 때를 대비해 가끔 백업해 두세요. 백업 파일은 이 앱을 쓰는 다른 기기에서도 그대로 불러올 수 있어요.</p>
+    <button class="btn-save" id="exportBtn" style="width:100%;margin-bottom:10px;">백업 파일 내려받기</button>
+    <button class="btn-cancel" id="importBtn" style="width:100%;">백업 파일 불러오기</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;" />
+    <div class="sheet-actions" style="margin-top:16px;"><button class="btn-cancel" id="closeSettings" style="flex:1;">닫기</button></div>
+  `);
+  document.getElementById('closeSettings').addEventListener('click', closeSheet);
+  document.getElementById('exportBtn').addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(DB, null, 2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `개인스케줄러-백업-${toKey(new Date())}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    showStatus('백업 파일을 내려받았어요');
+  });
+  const fileInput = document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      try{
+        const parsed = JSON.parse(reader.result);
+        DB = Object.assign(DB, parsed);
+        closeSheet(); render(); await saveDB();
+        showStatus('백업을 불러왔어요');
+      }catch(e){ showStatus('파일을 읽을 수 없어요. 백업 파일이 맞는지 확인해 주세요.'); }
+    };
+    reader.readAsText(file);
+  });
+}
+
+/* ===================== 시트(모달) ===================== */
+function openSheet(html){
+  document.getElementById('sheet').innerHTML = html;
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet(){ document.getElementById('overlay').classList.remove('open'); }
+document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeSheet(); });
+
+/* ===================== 하단 네비게이션 ===================== */
+const ICONS = {
+  schedule:'<path d="M3 4h18v17H3z"/><path d="M3 9h18M8 2v4M16 2v4"/>',
+  school:'<path d="M12 3 2 8l10 5 10-5-10-5z"/><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5"/>',
+  job:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
+  finance:'<circle cx="12" cy="12" r="9"/><path d="M12 7v10M9 9.5a2.5 2.5 0 0 1 2.5-2.5h1a2.5 2.5 0 0 1 0 5h-1a2.5 2.5 0 0 0 0 5h1a2.5 2.5 0 0 0 2.5-2.5"/>',
+  todo:'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  memo:'<path d="M4 4h16v12H9l-5 5z"/>'
+};
+const TAB_LABEL={schedule:'일정',school:'학교',job:'알바',finance:'재정',todo:'할일',memo:'메모'};
+function svg(inner){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`; }
+
+function renderBotnav(){
+  const nav=document.getElementById('botnav');
+  nav.innerHTML = Object.keys(TAB_LABEL).map(t=>
+    `<button data-tab="${t}" class="${state.tab===t?'on':''}">${svg(ICONS[t])}<span>${TAB_LABEL[t]}</span></button>`
+  ).join('');
+  nav.querySelectorAll('button').forEach(b=>b.addEventListener('click', ()=>{ state.tab=b.dataset.tab; render(); }));
+}
+
+/* ===================== 공통: 주간 리스트 (일정/할일) ===================== */
+function renderWeekSection(kind){ // kind: 'schedule' | 'todo'
+  const offsetKey = kind==='schedule' ? 'weekOffset' : 'todoWeekOffset';
+  const dataArr = kind==='schedule' ? DB.schedule : DB.todo;
+  const base = startOfWeek(new Date()); base.setDate(base.getDate()+state[offsetKey]*7);
+  const days=[...Array(7)].map((_,i)=>{ const d=new Date(base); d.setDate(base.getDate()+i); return d; });
+  const first=days[0], last=days[6];
+  const todayKey=toKey(new Date());
+  const today=new Date();
+
+  let heroHtml='';
+  if(kind==='schedule'){
+    const todayItems = dataArr.filter(i=>i.date===todayKey);
+    const undone = todayItems.filter(i=>!i.done).length;
+    heroHtml = `
+      <div class="hero">
+        <div class="datebig"><span class="num">${today.getDate()}</span><span class="day">${DAY_NAMES[today.getDay()]}요일</span></div>
+        <p class="summary">${todayItems.length? `오늘 일정 <b>${todayItems.length}개</b> · 남은 일 <b>${undone}개</b>` : '오늘은 등록된 일정이 없어요'}</p>
+      </div>`;
+  }
+
+  let daysHtml = days.map(d=>{
+    const key=toKey(d);
+    const dayItems = dataArr.filter(i=>i.date===key)
+      .sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'));
+    const itemsHtml = dayItems.length ? dayItems.map(it=>`
+      <div class="item ${it.done?'done':''}" data-id="${it.id}">
+        <button class="check" data-act="toggle"></button>
+        <div class="body">
+          <div class="title">${escapeHtml(it.title)}</div>
+          ${it.time?`<div class="meta"><span class="time">${it.time}</span></div>`:''}
+        </div>
+        <button class="del" data-act="del">✕</button>
+      </div>`).join('') : `<p class="empty">${kind==='schedule'?'일정 없음':'할 일 없음'}</p>`;
+    return `
+      <div class="day ${key===todayKey?'is-today':''}">
+        <div class="dhead"><span class="dname">${DAY_NAMES[d.getDay()]}</span><span class="ddate">${d.getMonth()+1}.${d.getDate()}</span><span class="dcount">${dayItems.length?dayItems.length+'개':''}</span></div>
+        <div class="items">${itemsHtml}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="topbar"><h1>${kind==='schedule'?'일정':'할일'}</h1><p class="sub">${kind==='schedule'?'이번 주에 예정된 일정을 관리해요':'매주 해야 할 일을 체크해요'}</p></div>
+    <div class="weeknav">
+      <button class="nav" data-act="prevweek">‹</button>
+      <span class="range">${first.getMonth()+1}.${first.getDate()} - ${last.getMonth()+1}.${last.getDate()}</span>
+      <button class="nav" data-act="nextweek">›</button>
+    </div>
+    ${heroHtml}
+    <div class="days">${daysHtml}</div>
+  `;
+}
+function bindWeekSection(kind){
+  const offsetKey = kind==='schedule' ? 'weekOffset' : 'todoWeekOffset';
+  document.querySelector('[data-act="prevweek"]').addEventListener('click', ()=>{ state[offsetKey]--; render(); });
+  document.querySelector('[data-act="nextweek"]').addEventListener('click', ()=>{ state[offsetKey]++; render(); });
+  document.querySelectorAll('.item').forEach(row=>{
+    const id=row.dataset.id;
+    const arr = kind==='schedule'?DB.schedule:DB.todo;
+    row.querySelector('[data-act="toggle"]').addEventListener('click', async ()=>{
+      const it=arr.find(x=>x.id===id); it.done=!it.done; render(); await saveDB();
+    });
+    row.querySelector('[data-act="del"]').addEventListener('click', async ()=>{
+      const idx=arr.findIndex(x=>x.id===id); arr.splice(idx,1); render(); await saveDB(); showStatus('삭제했어요');
+    });
+  });
+}
+function openAddWeekItem(kind){
+  const today=toKey(new Date());
+  openSheet(`
+    <h3>${kind==='schedule'?'일정 추가':'할 일 추가'}</h3>
+    <div class="field"><label>내용</label><input type="text" id="fTitle" placeholder="${kind==='schedule'?'예: 동아리 회의':'예: 세탁물 찾기'}" /></div>
+    <div class="row2">
+      <div class="field"><label>날짜</label><input type="date" id="fDate" value="${today}" /></div>
+      ${kind==='schedule'?'<div class="field"><label>시간 (선택)</label><input type="time" id="fTime" /></div>':''}
+    </div>
+    <div class="sheet-actions"><button class="btn-cancel" id="cancel">취소</button><button class="btn-save" id="save">저장</button></div>
+  `);
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const title=document.getElementById('fTitle').value.trim();
+    const date=document.getElementById('fDate').value;
+    const time= kind==='schedule' ? document.getElementById('fTime').value : '';
+    if(!title||!date){ showStatus('내용과 날짜를 입력해 주세요'); return; }
+    const arr = kind==='schedule'?DB.schedule:DB.todo;
+    arr.push({id:uid(), title, date, time, done:false});
+    closeSheet(); render(); await saveDB(); showStatus('추가했어요');
+  });
+}
+
+/* ===================== 학교 · 수업(시간표) ===================== */
+const HOURS=[9,10,11,12,13,14,15,16,17];
+const DAYS5=['월','화','수','목','금'];
+const CLASS_COLORS=[
+  {key:'school',bg:'var(--c-school-bg)',ink:'var(--c-school)'},
+  {key:'job',bg:'var(--c-job-bg)',ink:'var(--c-job)'},
+  {key:'social',bg:'var(--c-social-bg)',ink:'var(--c-social)'},
+  {key:'me',bg:'var(--c-me-bg)',ink:'var(--c-me)'},
+  {key:'sky',bg:'var(--c-sky-bg)',ink:'var(--c-sky)'},
+  {key:'plum',bg:'var(--c-plum-bg)',ink:'var(--c-plum)'},
+];
+function colorInfo(key){ return CLASS_COLORS.find(c=>c.key===key) || CLASS_COLORS[0]; }
+function getClassNames(){ return [...new Set(DB.classes.map(c=>c.name).filter(Boolean))]; }
+function classColorByName(name){
+  const c = DB.classes.find(c=>c.name===name);
+  return c ? colorInfo(c.color) : null;
+}
+
+function renderClassTable(){
+  let rows = HOURS.map(h=>{
+    let cells = DAYS5.map((_,dayIdx)=>{
+      const c = DB.classes.find(x=>x.day===dayIdx && x.hour===h);
+      if(c){
+        const col=colorInfo(c.color);
+        return `<td class="filled" style="background:${col.bg};color:${col.ink};" data-day="${dayIdx}" data-hour="${h}"><b>${escapeHtml(c.name)}</b>${c.room?`<span>${escapeHtml(c.room)}</span>`:''}</td>`;
+      }
+      return `<td data-day="${dayIdx}" data-hour="${h}"></td>`;
+    }).join('');
+    return `<tr><td class="hourlabel">${h}시</td>${cells}</tr>`;
+  }).join('');
+  return `
+    <p class="sub" style="margin:0 0 10px;">한 칸을 누르거나, 여러 칸을 드래그해서 한 번에 등록하세요 (09시~18시)</p>
+    <table class="ttable">
+      <tr><th></th>${DAYS5.map(d=>`<th>${d}</th>`).join('')}</tr>
+      ${rows}
+    </table>
+  `;
+}
+/* 드래그로 여러 칸 한 번에 선택 */
+const dragState = { active:false, day:null, startHour:null, endHour:null };
+function clearSelectingClass(){
+  document.querySelectorAll('.ttable td.selecting').forEach(td=>td.classList.remove('selecting'));
+}
+function paintSelection(){
+  clearSelectingClass();
+  if(!dragState.active) return;
+  const lo=Math.min(dragState.startHour,dragState.endHour), hi=Math.max(dragState.startHour,dragState.endHour);
+  document.querySelectorAll(`.ttable td[data-day="${dragState.day}"]`).forEach(td=>{
+    const h=+td.dataset.hour;
+    if(h>=lo && h<=hi) td.classList.add('selecting');
+  });
+}
+function bindClassTable(){
+  document.querySelectorAll('.ttable td[data-hour]').forEach(td=>{
+    td.addEventListener('pointerdown', (e)=>{
+      e.preventDefault();
+      dragState.active=true;
+      dragState.day=+td.dataset.day;
+      dragState.startHour=+td.dataset.hour;
+      dragState.endHour=+td.dataset.hour;
+      paintSelection();
+    });
+  });
+}
+if(!window.__ttableDragBound){
+  window.__ttableDragBound = true;
+  document.addEventListener('pointermove', (e)=>{
+    if(!dragState.active) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const td = el && el.closest ? el.closest('.ttable td[data-hour]') : null;
+    if(td && +td.dataset.day===dragState.day){
+      dragState.endHour = +td.dataset.hour;
+      paintSelection();
+    }
+  });
+  document.addEventListener('pointerup', ()=>{
+    if(!dragState.active) return;
+    dragState.active=false;
+    const day=dragState.day;
+    const lo=Math.min(dragState.startHour,dragState.endHour), hi=Math.max(dragState.startHour,dragState.endHour);
+    clearSelectingClass();
+    if(lo===hi) openClassCellSheet(day,lo);
+    else openClassRangeSheet(day,lo,hi);
+  });
+  document.addEventListener('pointercancel', ()=>{ dragState.active=false; clearSelectingClass(); });
+}
+function openClassCellSheet(day,hour){
+  const existing = DB.classes.find(c=>c.day===day && c.hour===hour);
+  openSheet(`
+    <h3>${DAYS5[day]}요일 ${hour}:00 - ${hour+1}:00</h3>
+    <div class="field"><label>강의명</label><input type="text" id="fName" value="${existing?escapeHtml(existing.name):''}" placeholder="예: 경제학원론" /></div>
+    <div class="field"><label>강의실 (선택)</label><input type="text" id="fRoom" value="${existing?escapeHtml(existing.room||''):''}" placeholder="예: 302호" /></div>
+    <div class="field"><label>색상</label><div class="swatches" id="swatches">
+      ${CLASS_COLORS.map(c=>`<span class="swatch ${existing&&existing.color===c.key?'sel':''}" data-c="${c.key}" style="background:${c.ink}"></span>`).join('')}
+    </div></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancel">취소</button>
+      ${existing?'<button class="btn-danger" id="del">삭제</button>':''}
+      <button class="btn-save" id="save">저장</button>
+    </div>
+  `);
+  let selColor = existing ? existing.color : CLASS_COLORS[0].key;
+  document.querySelectorAll('#swatches .swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{ selColor=sw.dataset.c; document.querySelectorAll('#swatches .swatch').forEach(x=>x.classList.toggle('sel',x===sw)); });
+  });
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  if(existing) document.getElementById('del').addEventListener('click', async ()=>{
+    DB.classes = DB.classes.filter(c=>!(c.day===day&&c.hour===hour));
+    closeSheet(); render(); await saveDB(); showStatus('삭제했어요');
+  });
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const name=document.getElementById('fName').value.trim();
+    const room=document.getElementById('fRoom').value.trim();
+    if(!name){ showStatus('강의명을 입력해 주세요'); return; }
+    if(existing){ existing.name=name; existing.room=room; existing.color=selColor; }
+    else DB.classes.push({id:uid(), day, hour, name, room, color:selColor});
+    closeSheet(); render(); await saveDB(); showStatus('저장했어요');
+  });
+}
+
+function openClassRangeSheet(day,h1,h2){
+  const existing = DB.classes.find(c=>c.day===day && c.hour>=h1 && c.hour<=h2);
+  openSheet(`
+    <h3>${DAYS5[day]}요일 ${h1}:00 - ${h2+1}:00</h3>
+    <p class="sub" style="margin:0 0 12px;">${h2-h1+1}시간 연속 수업으로 한 번에 등록해요</p>
+    <div class="field"><label>강의명</label><input type="text" id="fName" value="${existing?escapeHtml(existing.name):''}" placeholder="예: 경제학원론" /></div>
+    <div class="field"><label>강의실 (선택)</label><input type="text" id="fRoom" value="${existing?escapeHtml(existing.room||''):''}" placeholder="예: 302호" /></div>
+    <div class="field"><label>색상</label><div class="swatches" id="swatches">
+      ${CLASS_COLORS.map(c=>`<span class="swatch ${existing&&existing.color===c.key?'sel':''}" data-c="${c.key}" style="background:${c.ink}"></span>`).join('')}
+    </div></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancel">취소</button>
+      <button class="btn-danger" id="clear">이 구간 비우기</button>
+      <button class="btn-save" id="save">저장</button>
+    </div>
+  `);
+  let selColor = existing ? existing.color : CLASS_COLORS[0].key;
+  document.querySelectorAll('#swatches .swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{ selColor=sw.dataset.c; document.querySelectorAll('#swatches .swatch').forEach(x=>x.classList.toggle('sel',x===sw)); });
+  });
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  document.getElementById('clear').addEventListener('click', async ()=>{
+    DB.classes = DB.classes.filter(c=>!(c.day===day && c.hour>=h1 && c.hour<=h2));
+    closeSheet(); render(); await saveDB(); showStatus('비웠어요');
+  });
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const name=document.getElementById('fName').value.trim();
+    const room=document.getElementById('fRoom').value.trim();
+    if(!name){ showStatus('강의명을 입력해 주세요'); return; }
+    DB.classes = DB.classes.filter(c=>!(c.day===day && c.hour>=h1 && c.hour<=h2));
+    for(let h=h1; h<=h2; h++) DB.classes.push({id:uid(), day, hour:h, name, room, color:selColor});
+    closeSheet(); render(); await saveDB(); showStatus('저장했어요');
+  });
+}
+
+/* ===================== 학교 · 과제 ===================== */
+function renderAssignments(){
+  const names=getClassNames();
+  const list=[...DB.assignments].sort((a,b)=>(a.dueDate||'').localeCompare(b.dueDate||''));
+  const rows = list.length ? list.map(a=>{
+    const col = classColorByName(a.className);
+    return `<div class="listcard ${a.done?'done':''}" data-id="${a.id}">
+      <div class="row1">
+        <button class="check" data-act="toggle" style="width:19px;height:19px;border-radius:6px;border:1.5px solid var(--line);background:${a.done?'var(--ink-soft)':'var(--surface)'};flex:none;"></button>
+        <span class="main">${escapeHtml(a.title)}</span>
+        <button class="del" data-act="del">✕</button>
+      </div>
+      <div class="row2">
+        <span class="tag" style="background:${col?col.bg:'var(--surface-soft)'};color:${col?col.ink:'var(--ink-soft)'}">${escapeHtml(a.className||'기타')}</span>
+        ${a.dueDate?`<span>~ ${a.dueDate.slice(5).replace('-','.')}</span>`:''}
+      </div>
+    </div>`;
+  }).join('') : '<p class="empty">등록된 과제가 없어요</p>';
+  return `<p class="sub" style="margin:0 0 12px;">${names.length? '수업 탭에 등록한 강의와 연동돼요' : '먼저 수업 탭에서 강의를 등록하면 편해요'}</p>${rows}`;
+}
+function bindAssignments(){
+  document.querySelectorAll('#content .listcard').forEach(card=>{
+    const id=card.dataset.id;
+    card.querySelector('[data-act="toggle"]').addEventListener('click', async ()=>{
+      const a=DB.assignments.find(x=>x.id===id); a.done=!a.done; render(); await saveDB();
+    });
+    card.querySelector('[data-act="del"]').addEventListener('click', async ()=>{
+      DB.assignments=DB.assignments.filter(x=>x.id!==id); render(); await saveDB(); showStatus('삭제했어요');
+    });
+  });
+}
+function openAddAssignment(){
+  const names=getClassNames();
+  openSheet(`
+    <h3>과제 추가</h3>
+    <div class="field"><label>강의</label>
+      <select id="fClass">${names.length?names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join(''):''}<option value="기타">기타</option></select>
+    </div>
+    <div class="field"><label>과제 내용</label><input type="text" id="fTitle" placeholder="예: 3장 요약 제출" /></div>
+    <div class="field"><label>마감일</label><input type="date" id="fDue" value="${toKey(new Date())}" /></div>
+    <div class="sheet-actions"><button class="btn-cancel" id="cancel">취소</button><button class="btn-save" id="save">저장</button></div>
+  `);
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const className=document.getElementById('fClass').value;
+    const title=document.getElementById('fTitle').value.trim();
+    const dueDate=document.getElementById('fDue').value;
+    if(!title){ showStatus('과제 내용을 입력해 주세요'); return; }
+    DB.assignments.push({id:uid(), className, title, dueDate, done:false});
+    closeSheet(); render(); await saveDB(); showStatus('추가했어요');
+  });
+}
+
+/* ===================== 공통 월간 달력 ===================== */
+function monthBounds(offset){
+  const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+offset);
+  return {year:d.getFullYear(), month:d.getMonth()};
+}
+function renderMonthGrid(year, month, markerFn){
+  const first=new Date(year,month,1);
+  const startBlank=mondayIndex(first);
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const todayKey=toKey(new Date());
+  let cells='';
+  for(let i=0;i<startBlank;i++) cells+='<div class="calcell blank"></div>';
+  for(let day=1; day<=daysInMonth; day++){
+    const key=`${year}-${pad(month+1)}-${pad(day)}`;
+    const markers=markerFn(key);
+    const dots = markers.length ? `<div class="dots">${markers.slice(0,4).map(m=>`<span style="background:${m}"></span>`).join('')}</div>` : '';
+    cells += `<div class="calcell ${key===todayKey?'today':''}" data-date="${key}"><span class="dnum">${day}</span>${dots}</div>`;
+  }
+  return `
+    <div class="calgrid">
+      ${DOW_MON.map(d=>`<div class="dow">${d}</div>`).join('')}
+      ${cells}
+    </div>`;
+}
+
+/* ===================== 학교 · 시험 ===================== */
+function renderExamsTab(){
+  const {year,month}=monthBounds(state.schoolMonthOffset);
+  const grid = renderMonthGrid(year,month, key=>{
+    return DB.exams.filter(e=>e.date===key).map(e=>{
+      const col=classColorByName(e.className); return col?col.ink:'var(--ink-soft)';
+    });
+  });
+  return `
+    <div class="monthnav">
+      <button class="nav" data-act="prevmonth">‹</button>
+      <span class="range">${year}년 ${month+1}월</span>
+      <button class="nav" data-act="nextmonth">›</button>
+    </div>
+    ${grid}
+  `;
+}
+function bindExamsTab(){
+  document.querySelector('[data-act="prevmonth"]').addEventListener('click', ()=>{ state.schoolMonthOffset--; render(); });
+  document.querySelector('[data-act="nextmonth"]').addEventListener('click', ()=>{ state.schoolMonthOffset++; render(); });
+  document.querySelectorAll('.calcell[data-date]').forEach(cell=>{
+    cell.addEventListener('click', ()=>openExamDaySheet(cell.dataset.date));
+  });
+}
+function openExamDaySheet(dateKey){
+  const names=getClassNames();
+  function body(){
+    const list = DB.exams.filter(e=>e.date===dateKey);
+    return `
+      <h3>${dateKey.slice(5).replace('-','월 ')}일 시험</h3>
+      <div class="exlist" id="exlist">
+        ${list.length ? list.map(e=>`<div class="exrow"><b>${escapeHtml(e.className||'기타')}</b><span>${escapeHtml(e.memo||'')}</span><button class="x" data-id="${e.id}">✕</button></div>`).join('') : '<p class="empty">등록된 시험이 없어요</p>'}
+      </div>
+      <hr class="sep">
+      <div class="field"><label>강의</label>
+        <select id="fClass">${names.length?names.map(n=>`<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join(''):''}<option value="기타">기타</option></select>
+      </div>
+      <div class="field"><label>시험 특징 메모</label><textarea id="fMemo" placeholder="예: 객관식 20문항, 3~7장 범위"></textarea></div>
+      <div class="sheet-actions"><button class="btn-cancel" id="cancel">닫기</button><button class="btn-save" id="save">추가</button></div>
+    `;
+  }
+  openSheet(body());
+  function bind(){
+    document.getElementById('cancel').addEventListener('click', closeSheet);
+    document.querySelectorAll('#exlist .x').forEach(x=>{
+      x.addEventListener('click', async ()=>{
+        DB.exams = DB.exams.filter(e=>e.id!==x.dataset.id);
+        await saveDB(); openSheet(body()); bind(); render();
+      });
+    });
+    document.getElementById('save').addEventListener('click', async ()=>{
+      const className=document.getElementById('fClass').value;
+      const memo=document.getElementById('fMemo').value.trim();
+      DB.exams.push({id:uid(), date:dateKey, className, memo});
+      await saveDB(); showStatus('시험 일정을 추가했어요');
+      openSheet(body()); bind(); render();
+    });
+  }
+  bind();
+}
+
+/* ===================== 알바 · 근무일 ===================== */
+function renderWorkdaysTab(){
+  const {year,month}=monthBounds(state.jobMonthOffset);
+  const grid = renderMonthGrid(year,month, key => DB.workdays.some(w=>w.date===key) ? ['var(--c-job)'] : []);
+  return `
+    <div class="monthnav">
+      <button class="nav" data-act="prevmonth">‹</button>
+      <span class="range">${year}년 ${month+1}월</span>
+      <button class="nav" data-act="nextmonth">›</button>
+    </div>
+    ${grid}
+  `;
+}
+function bindWorkdaysTab(){
+  document.querySelector('[data-act="prevmonth"]').addEventListener('click', ()=>{ state.jobMonthOffset--; render(); });
+  document.querySelector('[data-act="nextmonth"]').addEventListener('click', ()=>{ state.jobMonthOffset++; render(); });
+  document.querySelectorAll('.calcell[data-date]').forEach(cell=>{
+    cell.addEventListener('click', ()=>openWorkdaySheet(cell.dataset.date));
+  });
+}
+function openWorkdaySheet(dateKey){
+  const existing = DB.workdays.find(w=>w.date===dateKey);
+  const exH = existing ? Math.floor(existing.hours||0) : '';
+  const exM = existing ? Math.round(((existing.hours||0)%1)*60) : '';
+  openSheet(`
+    <h3>${dateKey.slice(5).replace('-','월 ')}일 근무</h3>
+    <div class="row2">
+      <div class="field"><label>근무시간 (시간)</label><input type="number" id="fHour" min="0" max="23" value="${exH}" placeholder="0" /></div>
+      <div class="field"><label>근무시간 (분)</label><input type="number" id="fMin" min="0" max="59" value="${exM}" placeholder="0" /></div>
+    </div>
+    <div class="field"><label>메모 (선택)</label><textarea id="fMemo" placeholder="예: 오픈 타임, 재고 정리">${existing?escapeHtml(existing.memo||''):''}</textarea></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancel">취소</button>
+      ${existing?'<button class="btn-danger" id="del">근무일 취소</button>':''}
+      <button class="btn-save" id="save">${existing?'저장':'근무일로 등록'}</button>
+    </div>
+  `);
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  if(existing) document.getElementById('del').addEventListener('click', async ()=>{
+    DB.workdays = DB.workdays.filter(w=>w.date!==dateKey);
+    closeSheet(); render(); await saveDB(); showStatus('취소했어요');
+  });
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const memo=document.getElementById('fMemo').value.trim();
+    const h=parseInt(document.getElementById('fHour').value)||0;
+    const m=parseInt(document.getElementById('fMin').value)||0;
+    const hours = h + m/60;
+    if(existing){ existing.memo=memo; existing.hours=hours; }
+    else DB.workdays.push({id:uid(), date:dateKey, memo, hours});
+    closeSheet(); render(); await saveDB(); showStatus('저장했어요');
+  });
+}
+
+/* ===================== 알바 · 급여 ===================== */
+const WAGE=12000;
+function formatHM(dec){
+  const h=Math.floor(dec), m=Math.round((dec%1)*60);
+  return m ? `${h}시간 ${m}분` : `${h}시간`;
+}
+function renderPayTab(){
+  const {year,month}=monthBounds(state.jobMonthOffset);
+  const prefix=`${year}-${pad(month+1)}`;
+  const list = DB.workdays.filter(w=>w.date.startsWith(prefix)).sort((a,b)=>a.date.localeCompare(b.date));
+  const rows = list.length ? list.map(w=>`
+    <div class="payrow" data-date="${w.date}">
+      <span class="pdate">${w.date.slice(8)}일</span>
+      <span class="pmemo">${escapeHtml(w.memo||'')}</span>
+      <input type="number" min="0" step="0.25" class="phours" value="${w.hours||''}" placeholder="시간" />
+      <span class="pwon">${money((w.hours||0)*WAGE)}원</span>
+    </div>`).join('') : '<p class="empty">이 달에 등록된 근무일이 없어요. 근무일 탭에서 먼저 등록해 주세요.</p>';
+  const totalHours = list.reduce((s,w)=>s+(w.hours||0),0);
+  const gross = totalHours*WAGE;
+  const net = Math.round(gross*0.967);
+  return `
+    <div class="monthnav">
+      <button class="nav" data-act="prevmonth">‹</button>
+      <span class="range">${year}년 ${month+1}월</span>
+      <button class="nav" data-act="nextmonth">›</button>
+    </div>
+    <p class="sub" style="margin:0 0 8px;">근무일 탭에서 등록한 시간이 자동으로 반영돼요 · 시급 ${money(WAGE)}원</p>
+    ${rows}
+    <div class="paytotal">
+      <div class="l"><span>총 근무시간</span><span>${formatHM(totalHours)}</span></div>
+      <div class="l"><span>세전 급여</span><span>${money(gross)}원</span></div>
+      <div class="l net"><span>세후 예상 (3.3% 공제)</span><span>${money(net)}원</span></div>
+    </div>
+  `;
+}
+function bindPayTab(){
+  document.querySelector('[data-act="prevmonth"]').addEventListener('click', ()=>{ state.jobMonthOffset--; render(); });
+  document.querySelector('[data-act="nextmonth"]').addEventListener('click', ()=>{ state.jobMonthOffset++; render(); });
+  document.querySelectorAll('.payrow .phours').forEach(inp=>{
+    inp.addEventListener('change', async ()=>{
+      const date=inp.closest('.payrow').dataset.date;
+      const w=DB.workdays.find(x=>x.date===date);
+      w.hours=parseFloat(inp.value)||0;
+      render(); await saveDB();
+    });
+  });
+}
+
+/* ===================== 알바 · 할일 ===================== */
+function renderJobTodo(){
+  const list=DB.jobTodo;
+  const rows = list.length ? list.map(t=>`
+    <div class="listcard ${t.done?'done':''}" data-id="${t.id}">
+      <div class="row1">
+        <button class="check" data-act="toggle" style="width:19px;height:19px;border-radius:6px;border:1.5px solid var(--line);background:${t.done?'var(--ink-soft)':'var(--surface)'};flex:none;"></button>
+        <span class="main">${escapeHtml(t.text)}</span>
+        <button class="del" data-act="del">✕</button>
+      </div>
+    </div>`).join('') : '<p class="empty">오늘 할 일/업무 메뉴얼 등 잊지 말아야 할 정보를 메모하세요</p>';
+  return rows;
+}
+function bindJobTodo(){
+  document.querySelectorAll('#content .listcard').forEach(card=>{
+    const id=card.dataset.id;
+    card.querySelector('[data-act="toggle"]').addEventListener('click', async ()=>{
+      const t=DB.jobTodo.find(x=>x.id===id); t.done=!t.done; render(); await saveDB();
+    });
+    card.querySelector('[data-act="del"]').addEventListener('click', async ()=>{
+      DB.jobTodo=DB.jobTodo.filter(x=>x.id!==id); render(); await saveDB(); showStatus('삭제했어요');
+    });
+  });
+}
+function openAddJobTodo(){
+  openSheet(`
+    <h3>할일 메모 추가</h3>
+    <div class="field"><label>내용</label><input type="text" id="fTitle" placeholder="예: 유니폼 세탁해서 가져가기" /></div>
+    <div class="sheet-actions"><button class="btn-cancel" id="cancel">취소</button><button class="btn-save" id="save">저장</button></div>
+  `);
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const text=document.getElementById('fTitle').value.trim();
+    if(!text){ showStatus('내용을 입력해 주세요'); return; }
+    DB.jobTodo.push({id:uid(), text, done:false});
+    closeSheet(); render(); await saveDB(); showStatus('추가했어요');
+  });
+}
+
+/* ===================== 재정 (수입/지출/이체/자산) ===================== */
+function renderFinanceList(kind){ // income | expense | transfer
+  const {year,month}=monthBounds(state.finMonthOffset);
+  const prefix=`${year}-${pad(month+1)}`;
+  const arr = DB[kind].filter(x=>x.date.startsWith(prefix)).sort((a,b)=>a.date.localeCompare(b.date));
+  const total = arr.reduce((s,x)=>s+(x.amount||0),0);
+  const sign = kind==='expense' ? 'neg' : (kind==='income'?'pos':'');
+  const label = kind==='income'?'이번 달 수입':kind==='expense'?'이번 달 지출':'이번 달 이체';
+  const rows = arr.length ? arr.map(x=>`
+    <div class="listcard" data-id="${x.id}">
+      <div class="row1">
+        <span class="main amount ${sign}">${kind==='expense'?'-':''}${money(x.amount)}원</span>
+        <button class="del" data-act="del">✕</button>
+      </div>
+      <div class="row2"><span>${x.date.slice(8)}일</span>${x.memo?`<span>· ${escapeHtml(x.memo)}</span>`:''}</div>
+    </div>`).join('') : `<p class="empty">등록된 내역이 없어요</p>`;
+  return `
+    <div class="monthnav">
+      <button class="nav" data-act="prevmonth">‹</button>
+      <span class="range">${year}년 ${month+1}월</span>
+      <button class="nav" data-act="nextmonth">›</button>
+    </div>
+    <div class="sumbar"><span>${label}</span><b class="${sign}">${money(total)}원</b></div>
+    ${rows}
+  `;
+}
+function bindFinanceList(kind){
+  document.querySelector('[data-act="prevmonth"]').addEventListener('click', ()=>{ state.finMonthOffset--; render(); });
+  document.querySelector('[data-act="nextmonth"]').addEventListener('click', ()=>{ state.finMonthOffset++; render(); });
+  document.querySelectorAll('#content .listcard').forEach(card=>{
+    const id=card.dataset.id;
+    card.querySelector('[data-act="del"]').addEventListener('click', async ()=>{
+      DB[kind]=DB[kind].filter(x=>x.id!==id); render(); await saveDB(); showStatus('삭제했어요');
+    });
+  });
+}
+function openAddFinance(kind){
+  const {year,month}=monthBounds(state.finMonthOffset);
+  const defDate = `${year}-${pad(month+1)}-${pad(Math.min(new Date().getDate(), new Date(year,month+1,0).getDate()))}`;
+  const placeholder = kind==='income' ? '예: 과외비, 용돈' : kind==='expense' ? '예: 점심, 교재비' : '예: 적금 계좌로';
+  const title = kind==='income'?'수입 추가':kind==='expense'?'지출 추가':'이체 추가';
+  openSheet(`
+    <h3>${title}</h3>
+    <div class="row2">
+      <div class="field"><label>금액</label><input type="number" id="fAmt" placeholder="0" /></div>
+      <div class="field"><label>날짜</label><input type="date" id="fDate" value="${defDate}" /></div>
+    </div>
+    <div class="field"><label>메모 (선택)</label><input type="text" id="fMemo" placeholder="${placeholder}" /></div>
+    <div class="sheet-actions"><button class="btn-cancel" id="cancel">취소</button><button class="btn-save" id="save">저장</button></div>
+  `);
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const amount=parseFloat(document.getElementById('fAmt').value)||0;
+    const date=document.getElementById('fDate').value;
+    const memo=document.getElementById('fMemo').value.trim();
+    if(!amount||!date){ showStatus('금액과 날짜를 입력해 주세요'); return; }
+    DB[kind].push({id:uid(), date, amount, memo});
+    closeSheet(); render(); await saveDB(); showStatus('추가했어요');
+  });
+}
+
+const ASSET_FIELDS=[
+  {key:'main',label:'주거래 통장'},
+  {key:'allowance',label:'용돈 통장'},
+  {key:'securities',label:'증권 계좌'},
+  {key:'travel',label:'여행 저축 계좌'},
+  {key:'housing',label:'주택청약종합저축'}
+];
+function renderAssetsTab(){
+  const {year,month}=monthBounds(state.finMonthOffset);
+  const key=`${year}-${pad(month+1)}`;
+  const data = DB.assets[key] || {};
+  const totalStart = ASSET_FIELDS.reduce((s,f)=>s+((data[f.key]&&data[f.key].start)||0),0);
+  const totalEnd = ASSET_FIELDS.reduce((s,f)=>s+((data[f.key]&&data[f.key].end)||0),0);
+  return `
+    <div class="monthnav">
+      <button class="nav" data-act="prevmonth">‹</button>
+      <span class="range">${year}년 ${month+1}월</span>
+      <button class="nav" data-act="nextmonth">›</button>
+    </div>
+    <p class="sub" style="margin:0 0 6px;">1일과 말일 잔액을 각각 입력해요</p>
+    ${ASSET_FIELDS.map(f=>{
+      const v=data[f.key]||{};
+      return `
+      <div class="assetfield2">
+        <div class="af-label">${f.label}</div>
+        <div class="af-inputs">
+          <div class="af-col"><span class="af-tag">1일</span><input type="number" data-key="${f.key}" data-pos="start" value="${v.start||''}" placeholder="0" /></div>
+          <div class="af-col"><span class="af-tag">말일</span><input type="number" data-key="${f.key}" data-pos="end" value="${v.end||''}" placeholder="0" /></div>
+        </div>
+      </div>`;
+    }).join('')}
+    <div class="sumbar" style="margin-top:14px;"><span>월초(1일) 총자산</span><b id="assetTotalStart">${money(totalStart)}원</b></div>
+    <div class="sumbar"><span>월말 총자산</span><b id="assetTotalEnd">${money(totalEnd)}원</b></div>
+  `;
+}
+function bindAssetsTab(){
+  const {year,month}=monthBounds(state.finMonthOffset);
+  const key=`${year}-${pad(month+1)}`;
+  document.querySelector('[data-act="prevmonth"]').addEventListener('click', ()=>{ state.finMonthOffset--; render(); });
+  document.querySelector('[data-act="nextmonth"]').addEventListener('click', ()=>{ state.finMonthOffset++; render(); });
+  document.querySelectorAll('.assetfield2 input').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      if(!DB.assets[key]) DB.assets[key]={};
+      if(!DB.assets[key][inp.dataset.key]) DB.assets[key][inp.dataset.key]={};
+      DB.assets[key][inp.dataset.key][inp.dataset.pos]=parseFloat(inp.value)||0;
+      const totalStart=ASSET_FIELDS.reduce((s,f)=>s+((DB.assets[key][f.key]&&DB.assets[key][f.key].start)||0),0);
+      const totalEnd=ASSET_FIELDS.reduce((s,f)=>s+((DB.assets[key][f.key]&&DB.assets[key][f.key].end)||0),0);
+      document.getElementById('assetTotalStart').textContent = money(totalStart)+'원';
+      document.getElementById('assetTotalEnd').textContent = money(totalEnd)+'원';
+    });
+    inp.addEventListener('change', async ()=>{ await saveDB(); });
+  });
+}
+
+/* ===================== 메모 (포스트잇) ===================== */
+const STICKY_COLORS=['s-yellow','s-pink','s-mint','s-lav','s-peach'];
+function renderMemoTab(){
+  const list=[...DB.memos].sort((a,b)=>b.createdAt-a.createdAt);
+  if(!list.length) return '<p class="empty">첫 메모를 남겨보세요</p>';
+  return `<div class="stickygrid">${list.map(m=>`
+    <div class="sticky ${m.color}" data-id="${m.id}" style="transform:rotate(${m.rot||0}deg)">
+      <div class="stxt">${escapeHtml(m.text)}</div>
+      <div class="sdate">${m.createdAt ? new Date(m.createdAt).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}) : ''}</div>
+    </div>`).join('')}</div>`;
+}
+function bindMemoTab(){
+  document.querySelectorAll('.sticky').forEach(s=>{
+    s.addEventListener('click', ()=>openMemoSheet(s.dataset.id));
+  });
+}
+function openMemoSheet(id){
+  const existing = id ? DB.memos.find(m=>m.id===id) : null;
+  let selColor = existing ? existing.color : STICKY_COLORS[0];
+  openSheet(`
+    <h3>${existing?'메모 수정':'메모 추가'}</h3>
+    <div class="field"><textarea id="fText" rows="4" placeholder="메모를 입력하세요">${existing?escapeHtml(existing.text):''}</textarea></div>
+    <div class="field"><label>색상</label><div class="swatches" id="swatches">
+      ${STICKY_COLORS.map(c=>`<span class="swatch ${c===selColor?'sel':''}" data-c="${c}" style="background:var(--bg);background:${cssVarFor(c)}"></span>`).join('')}
+    </div></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="cancel">취소</button>
+      ${existing?'<button class="btn-danger" id="del">삭제</button>':''}
+      <button class="btn-save" id="save">저장</button>
+    </div>
+  `);
+  document.querySelectorAll('#swatches .swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{ selColor=sw.dataset.c; document.querySelectorAll('#swatches .swatch').forEach(x=>x.classList.toggle('sel',x===sw)); });
+  });
+  document.getElementById('cancel').addEventListener('click', closeSheet);
+  if(existing) document.getElementById('del').addEventListener('click', async ()=>{
+    DB.memos=DB.memos.filter(m=>m.id!==id); closeSheet(); render(); await saveDB(); showStatus('삭제했어요');
+  });
+  document.getElementById('save').addEventListener('click', async ()=>{
+    const text=document.getElementById('fText').value.trim();
+    if(!text){ showStatus('내용을 입력해 주세요'); return; }
+    if(existing){ existing.text=text; existing.color=selColor; }
+    else DB.memos.push({id:uid(), text, color:selColor, rot:(Math.random()*6-3).toFixed(1), createdAt:Date.now()});
+    closeSheet(); render(); await saveDB(); showStatus('저장했어요');
+  });
+}
+function cssVarFor(c){
+  const map={'s-yellow':'#F7EFC0','s-pink':'#F5DEE3','s-mint':'#D9EEE2','s-lav':'#E5DEF2','s-peach':'#F7E0CE'};
+  return map[c];
+}
+
+/* ===================== 메인 렌더 ===================== */
+function render(){
+  renderBotnav();
+  const content = document.getElementById('app');
+  const fab = document.getElementById('fab');
+  fab.classList.add('hidden');
+  fab.onclick = null;
+
+  let html = '';
+  if(state.tab==='schedule'){
+    html = renderWeekSection('schedule');
+  }
+  else if(state.tab==='todo'){
+    html = renderWeekSection('todo');
+  }
+  else if(state.tab==='school'){
+    html = `<div class="topbar"><h1>학교</h1><p class="sub">수업, 과제, 시험을 한눈에 관리해요</p></div>
+      <div class="subtabs">
+        <button data-s="class" class="${state.sub.school==='class'?'on':''}">수업</button>
+        <button data-s="assign" class="${state.sub.school==='assign'?'on':''}">과제</button>
+        <button data-s="exam" class="${state.sub.school==='exam'?'on':''}">시험</button>
+      </div>
+      <div id="content">
+        ${state.sub.school==='class'?renderClassTable():state.sub.school==='assign'?renderAssignments():renderExamsTab()}
+      </div>`;
+  }
+  else if(state.tab==='job'){
+    html = `<div class="topbar"><h1>알바</h1><p class="sub">근무일, 급여, 할일을 관리해요</p></div>
+      <div class="subtabs">
+        <button data-s="workday" class="${state.sub.job==='workday'?'on':''}">근무일</button>
+        <button data-s="pay" class="${state.sub.job==='pay'?'on':''}">급여</button>
+        <button data-s="todo" class="${state.sub.job==='todo'?'on':''}">할일</button>
+      </div>
+      <div id="content">
+        ${state.sub.job==='workday'?renderWorkdaysTab():state.sub.job==='pay'?renderPayTab():renderJobTodo()}
+      </div>`;
+  }
+  else if(state.tab==='finance'){
+    html = `<div class="topbar"><h1>재정</h1><p class="sub">수입, 지출, 이체, 자산을 관리해요</p></div>
+      <div class="subtabs">
+        <button data-s="income" class="${state.sub.finance==='income'?'on':''}">수입</button>
+        <button data-s="expense" class="${state.sub.finance==='expense'?'on':''}">지출</button>
+        <button data-s="transfer" class="${state.sub.finance==='transfer'?'on':''}">이체</button>
+        <button data-s="assets" class="${state.sub.finance==='assets'?'on':''}">자산</button>
+      </div>
+      <div id="content">
+        ${state.sub.finance==='assets'?renderAssetsTab():renderFinanceList(state.sub.finance)}
+      </div>`;
+  }
+  else if(state.tab==='memo'){
+    html = `<div class="topbar"><h1>메모</h1><p class="sub">포스트잇처럼 자유롭게 남겨보세요</p></div>
+      <div id="content">${renderMemoTab()}</div>`;
+  }
+
+  content.innerHTML = html;
+
+  // 서브탭 바인딩
+  content.querySelectorAll('.subtabs button').forEach(b=>{
+    b.addEventListener('click', ()=>{ state.sub[state.tab]=b.dataset.s; render(); });
+  });
+
+  // 탭별 세부 바인딩 + FAB 설정
+  if(state.tab==='schedule'){ bindWeekSection('schedule'); fab.classList.remove('hidden'); fab.onclick=()=>openAddWeekItem('schedule'); }
+  else if(state.tab==='todo'){ bindWeekSection('todo'); fab.classList.remove('hidden'); fab.onclick=()=>openAddWeekItem('todo'); }
+  else if(state.tab==='school'){
+    if(state.sub.school==='class'){ bindClassTable(); }
+    else if(state.sub.school==='assign'){ bindAssignments(); fab.classList.remove('hidden'); fab.onclick=openAddAssignment; }
+    else if(state.sub.school==='exam'){ bindExamsTab(); }
+  }
+  else if(state.tab==='job'){
+    if(state.sub.job==='workday'){ bindWorkdaysTab(); }
+    else if(state.sub.job==='pay'){ bindPayTab(); }
+    else if(state.sub.job==='todo'){ bindJobTodo(); fab.classList.remove('hidden'); fab.onclick=openAddJobTodo; }
+  }
+  else if(state.tab==='finance'){
+    if(state.sub.finance==='assets'){ bindAssetsTab(); }
+    else { bindFinanceList(state.sub.finance); fab.classList.remove('hidden'); fab.onclick=()=>openAddFinance(state.sub.finance); }
+  }
+  else if(state.tab==='memo'){
+    bindMemoTab(); fab.classList.remove('hidden'); fab.onclick=()=>openMemoSheet(null);
+  }
+}
+
+(async function init(){
+  await loadDB();
+  render();
+  document.getElementById('settingsBtn').addEventListener('click', openBackupSheet);
+})();
+</script>
+</body>
+</html>
